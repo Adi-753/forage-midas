@@ -9,12 +9,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class KafkaConsumer {
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
+    
+    private final DatabaseConduit databaseConduit;
+    
+    public KafkaConsumer(DatabaseConduit databaseConduit) {
+        this.databaseConduit = databaseConduit;
+    }
 
     @KafkaListener(topics = "${general.kafka-topic}", groupId = "midas-group")
     public void listen(Transaction transaction) {
-        // Log very clearly the important information you need to collect
         logger.info("TRANSACTION RECEIVED: amount = {}", transaction.getAmount());
         logger.info("TRANSACTION DETAILS: senderId = {}, recipientId = {}", 
                     transaction.getSenderId(), transaction.getRecipientId());
+        
+        // Process the transaction
+        databaseConduit.processTransaction(transaction);
     }
 }
